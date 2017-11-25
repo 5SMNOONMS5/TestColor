@@ -9,7 +9,6 @@
 import UIKit
 
 class Color: UIColor {
-
     convenience init(value: CGFloat) {
         self.init(red: value/255,
                   green: value/255,
@@ -59,40 +58,40 @@ class MainTableViewController: UITableViewController {
     func tapGesture(sender: UITapGestureRecognizer) {
         
         let point = sender.location(in: sender.view)
-        let color  = self.getPixelColorAtPoint(point: point, sourceView: self.tableView)
-        print(" color = \(color)")
+
+        if let color = self.getPixelColorAtPoint(point: point, sourceView: self.tableView) {
+            print("color is \(String(describing: color))")
+        } else {
+            print("not get color")
+        }
     }
 
-    /// <#Description#>
+    /// Get color in tap location
     ///
     /// - Parameters:
-    ///   - point: <#point description#>
-    ///   - sourceView: <#sourceView description#>
-    /// - Returns: <#return value description#>
+    ///   - point: the scrren point that you tapped.
+    ///   - sourceView: which view currently you tapped, usually the topmost
+    /// - Returns: a color
     fileprivate func getPixelColorAtPoint(point: CGPoint, sourceView: UIView) -> UIColor? {
         
         let pixel = UnsafeMutablePointer<CUnsignedChar>.allocate(capacity: 4)
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
         let context = CGContext(data: pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4, space: colorSpace, bitmapInfo: bitmapInfo.rawValue)
+        var color: UIColor? = nil
         
-        if let context = context
-        {
+        if let context = context {
             context.translateBy(x: -point.x, y: -point.y)
             sourceView.layer.render(in: context)
             
-            let color:UIColor = UIColor(red: CGFloat(pixel[0])/255.0,
-                                    green: CGFloat(pixel[1])/255.0,
-                                    blue: CGFloat(pixel[2])/255.0,
-                                    alpha: CGFloat(pixel[3])/255.0)
+            color = UIColor(red: CGFloat(pixel[0])/255.0,
+                            green: CGFloat(pixel[1])/255.0,
+                            blue: CGFloat(pixel[2])/255.0,
+                            alpha: CGFloat(pixel[3])/255.0)
             
             pixel.deallocate(capacity: 4)
-            return color
         }
-        else
-        {
-            return nil
-        }
+        return color
     }
 }
 
@@ -119,7 +118,6 @@ extension MainTableViewController {
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseId, for: indexPath)
-        
         cell.backgroundColor = self.colorArray[indexPath.row]
         return cell
     }
